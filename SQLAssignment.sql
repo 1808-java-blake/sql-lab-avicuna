@@ -17,22 +17,85 @@ SELECT * FROM chinook.EMPLOYEE
 	reportsto is null;
 -- 2.2 ORDER BY
 -- Task – Select all albums in Album table and sort result set in descending order by title.
+SELECT * FROM album
+	ORDER BY title desc;
 -- Task – Select first name from Customer and sort result set in ascending order by city
+SELECT firstname FROM customer
+	ORDER BY city;
 -- 2.3 INSERT INTO
 -- Task – Insert two new records into Genre table
+INSERT INTO genre(genreid, name)
+	VALUES(27, 'Moombahton');
+INSERT INTO genre(genreid, name)
+	VALUES(27, 'Death Metal');
 -- Task – Insert two new records into Employee table
+INSERT INTO employee(employeeid, lastname, firstname, title, reportsto, 
+	birthdate, hiredate, address, city, state, country, postalcode, phone, fax, email)
+VALUES
+ (9, 'Wallaby', 'Jeffrey', 'IT Staff', 6, '1776-08-14 00:00:00', 
+ 	'2003-05-26 00:00:00', '123 Easy St SW', 'New York', 'New York', 
+ 	'United States', '12345', '+1 (123) 456-7890', '+1 (123) 456-7891', 
+ 	'jeffiscool@chinookcorp.com');
+
+INSERT INTO employee(employeeid, lastname, firstname, title, reportsto, 
+	birthdate, hiredate, address, city, state, country, postalcode, phone, fax, email)
+VALUES
+ (10, 'Mungus', 'Hugh', 'IT Staff', 6, '1284-02-11 00:00:00', 
+ 	'2008-02-21 00:00:00', '123 Big St SW', 'Chicago', 'Illinois', 
+ 	'United States', '12345', '+1 (123) 456-7890', '+1 (123) 456-7891', 
+ 	'yaboihughmungus@chinookcorp.com');
 -- Task – Insert two new records into Customer table
+INSERT INTO customer(customerid, firstname, lastname, company, address, 
+	city, state, country, postalcode, phone, fax, email, supportrepid)
+VALUES
+ (10, 'Willy', 'Wonka', 'IT Staff', 'Chocolate Company', '123 Cocoa NW', 'Kansas City', 'Missouri', '12345', '+1 (123) 456-7890', '+1 (123) 456-7891', 'willy@wonka.com', 3);
+
+INSERT INTO customer(customerid, firstname, lastname, company, address, 
+	city, state, country, postalcode, phone, fax, email, supportrepid)
+VALUES
+ (11, 'Luke', 'Skywalker', 'IT Staff', 'The Force LLC', '123 Jedi SW', 'Oakland', 'California', '12345', '+1 (123) 456-7890', '+1 (123) 456-7891', 'willy@wonka.com', 3);
 -- 2.4 UPDATE
 -- Task – Update Aaron Mitchell in Customer table to Robert Walter
+UPDATE customer
+SET firstname = 'Robert',
+	lastname = 'Walter'
+WHERE
+ 	firstname = 'Aaron' and lastname = 'Mitchell';
 -- Task – Update name of artist in the Artist table “Creedence Clearwater Revival” to “CCR”
+UPDATE artist
+SET name = 'CCR'
+WHERE
+	name = 'Creedence Clearwater Revival'
+
 -- 2.5 LIKE
 -- Task – Select all invoices with a billing address like “T%”
+SELECT * FROM invoice
+	WHERE billingaddress LIKE 'T%';
 -- 2.6 BETWEEN
--- Task – Select all invoices that have a total between 15 and 50
--- Task – Select all employees hired between 1st of June 2003 and 1st of March 2004
+-- Task – Select all invoices that have a total between 15 and 
+SELECT * FROM invoice
+	WHERE total BETWEEN 15 and 50;
+-- Task – Select all employees hired between 1st of June 2003 and 1st of March 
+SELECT * FROM employee
+	WHERE hiredate BETWEEN '2003-06-01' and '2004-03-01';
 -- 2.7 DELETE
 -- Task – Delete a record in Customer table where the name is Robert Walter (There may be constraints that rely on this, find out how to resolve them).
+ALTER TABLE invoice
+DROP CONSTRAINT fk_invoicecustomerid,
+ADD CONSTRAINT fk_invoicecustomerid
+   FOREIGN KEY (customerid)
+   REFERENCES customer(customerid)
+   ON DELETE CASCADE;
 
+ALTER TABLE invoiceline
+DROP CONSTRAINT fk_invoicelineinvoiceid,
+ADD CONSTRAINT fk_invoicelineinvoiceidid
+   FOREIGN KEY (invoiceid)
+   REFERENCES invoice(invoiceid)
+   ON DELETE CASCADE;
+
+DELETE FROM customer
+WHERE firstname = 'Robert' and lastname = 'Walter';
 -- SQL Functions
 -- In this section you will be using the Oracle system functions, as well as your own functions, to perform various actions against the database
 -- 3.1 System Defined Functions
@@ -71,14 +134,33 @@ SELECT * FROM chinook.EMPLOYEE
 -- In this section you will be working with combing various tables through the use of joins. You will work with outer, inner, right, left, cross, and self joins.
 -- 7.1 INNER
 -- Task – Create an inner join that joins customers and orders and specifies the name of the customer and the invoiceId.
+SELECT customer.firstname, customer.lastname, 
+		invoice.invoiceid FROM customer
+INNER JOIN invoice ON (customer.customerid = invoice.customerid);
 -- 7.2 OUTER
 -- Task – Create an outer join that joins the customer and invoice table, specifying the CustomerId, firstname, lastname, invoiceId, and total.
+SELECT customer.customerid, customer.firstname,
+		customer.lastname, invoice.invoiceid,
+		invoice.total 
+		FROM customer 
+FULL OUTER JOIN invoice ON 
+		(customer.customerid = invoice.customerid);
 -- 7.3 RIGHT
--- Task – Create a right join that joins album and artist specifying artist name and title.
+-- Task – Create a right join that joins album and artist specifying artist name and title
+SELECT artist.name, album.title
+	FROM album
+	RIGHT JOIN artist ON 
+	(album.artistid = artist.artistid);
 -- 7.4 CROSS
 -- Task – Create a cross join that joins album and artist and sorts by artist name in ascending order.
+SELECT * FROM album
+	CROSS JOIN artist
+	ORDER BY artist.name;
 -- 7.5 SELF
 -- Task – Perform a self-join on the employee table, joining on the reportsto column.
+SELECT * FROM employee b
+	INNER JOIN employee n
+	ON b.reportsto = n.employeeid;
 
 
 
