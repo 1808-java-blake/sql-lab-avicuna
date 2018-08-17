@@ -100,23 +100,119 @@ WHERE firstname = 'Robert' and lastname = 'Walter';
 -- In this section you will be using the Oracle system functions, as well as your own functions, to perform various actions against the database
 -- 3.1 System Defined Functions
 -- Task – Create a function that returns the current time.
+CREATE OR REPLACE FUNCTION get_time() RETURNS time AS $$
+BEGIN
+    RETURN current_time;
+END;
+$$ LANGUAGE plpgsql;
 -- Task – create a function that returns the length of a mediatype from the mediatype table
+CREATE OR REPLACE FUNCTION get_length_of_mediatype(mediatype_name VARCHAR(25)) 
+RETURNS INTEGER AS $$
+BEGIN
+	RETURN length(name) FROM mediatype WHERE name = $1;																	  
+END;																		  
+$$ LANGUAGE plpgsql;
 -- 3.2 System Defined Aggregate Functions
 -- Task – Create a function that returns the average total of all invoices
+CREATE OR REPLACE FUNCTION average_total_invoices()
+	RETURNS FLOAT AS $$
+BEGIN
+	RETURN AVG(total) FROM invoice;
+END;
+$$ LANGUAGE plpgsql;
 -- Task – Create a function that returns the most expensive track
+CREATE OR REPLACE FUNCTION most_expensive_track()
+	RETURNS FLOAT AS $$
+BEGIN
+	RETURN MAX(unitprice) FROM track;
+END;
+$$ LANGUAGE plpgsql;
 -- 3.3 User Defined Scalar Functions
 -- Task – Create a function that returns the average price of invoiceline items in the invoiceline table
+CREATE OR REPLACE FUNCTION average_price_invoiceline()
+	RETURNS FLOAT AS $$
+BEGIN
+	RETURN AVG(unitprice) FROM invoiceline;
+END;
+$$ LANGUAGE plpgsql;
 -- 3.4 User Defined Table Valued Functions
 -- Task – Create a function that returns all employees who are born after 1968.
+CREATE OR REPLACE FUNCTION after_1968()
+	RETURNS refcursor AS $$
+DECLARE
+	curs refcursor;
+BEGIN 
+	OPEN curs FOR SELECT * FROM employee WHERE birthdate >= '1968-01-01 00:00:00';
+	RETURN curs;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT after_1968();
+FETCH ALL IN "<unnamed portal 1>";
 -- 4.0 Stored Procedures
 --  In this section you will be creating and executing stored procedures. You will be creating various types of stored procedures that take input and output parameters.
 -- 4.1 Basic Stored Procedure
 -- Task – Create a stored procedure that selects the first and last names of all the employees.
+CREATE OR REPLACE FUNCTION first_last() 
+ RETURNS TABLE (
+ first_name VARCHAR,
+ last_name VARCHAR
+) 
+AS $$
+BEGIN
+ RETURN QUERY SELECT
+ firstname,
+ lastname
+ FROM
+ employee;
+END; $$ 
+ 
+LANGUAGE 'plpgsql';
 -- 4.2 Stored Procedure Input Parameters
 -- Task – Create a stored procedure that updates the personal information of an employee.
+CREATE OR REPLACE FUNCTION update_personal_info(
+	employee_id INTEGER, postal_code VARCHAR(10), new_city VARCHAR(25))
+RETURNS	VOID AS $$
+BEGIN
+	UPDATE employee
+	SET employeeid = employee_id,
+		postalcode = postal_code,
+		city = new_city
+	WHERE employeeid = employee_id;
+END;
+$$ LANGUAGE plpgsql;
 -- Task – Create a stored procedure that returns the managers of an employee.
+CREATE OR REPLACE FUNCTION employee_managers()
+RETURNS TABLE (
+ first_name VARCHAR,
+ last_name VARCHAR,
+ reports_to INTEGER,
+ employee_id INTEGER,
+ managers_first_name VARCHAR,
+ managers_last_name VARCHAR)
+AS $$
+BEGIN
+ RETURN QUERY 
+ SELECT a.firstname, a.lastname, a.reportsto, b.employeeid, 
+		b.firstname, b.lastname 
+		FROM employee a, employee b 
+		WHERE a.reportsto = b.employeeid;
+END;
+$$ LANGUAGE plpgsql;
 -- 4.3 Stored Procedure Output Parameters
 -- Task – Create a stored procedure that returns the name and company of a customer.
+CREATE OR REPLACE FUNCTION customer_company()
+RETURNS TABLE (
+ first_name VARCHAR,
+ last_name VARCHAR,
+ company_name VARCHAR)
+AS $$
+BEGIN
+ RETURN QUERY 
+ SELECT firstname, lastname, company
+		FROM customer;
+END;
+$$ LANGUAGE plpgsql;
 -- 5.0 Transactions
 -- In this section you will be working with transactions. Transactions are usually nested within a stored procedure. You will also be working with handling errors in your SQL.
 -- Task – Create a transaction that given a invoiceId will delete that invoice (There may be constraints that rely on this, find out how to resolve them).
